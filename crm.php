@@ -53,6 +53,7 @@ function crm_fun() {
       wp_enqueue_script( 'jspdf-js', 'https://unpkg.com/tableexport.jquery.plugin/libs/jsPDF/jspdf.min.js', array('jquery'), '1.0' );
       wp_enqueue_script( 'jspdf-plugin-autotable', 'https://unpkg.com/tableexport.jquery.plugin/libs/jsPDF-AutoTable/jspdf.plugin.autotable.js', array('jquery'), '1.0' );
       wp_enqueue_script( 'bootstrap-table-export', 'https://unpkg.com/bootstrap-table@1.16.0/dist/extensions/export/bootstrap-table-export.min.js', array('jquery'), '1.0' );
+      wp_enqueue_script( 'script', plugins_url( '/js/script.js', __FILE__ ), array(), false, true );
     ?>
 
     <h1>מערכת ניהול מתווכים</h1>

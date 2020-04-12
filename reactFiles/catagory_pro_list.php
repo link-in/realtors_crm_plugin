@@ -11,7 +11,8 @@ $product = wc_get_product( $_SESSION['view'] );
 
 <table
 id="table"
-data-ajax="ajaxRequestUsers"
+class="product-list-table"
+data-ajax="ajaxRequestUsersCall"
 data-filter-control="true"
 data-detail-view="true"
 data-detail-view-icon="false"
@@ -25,6 +26,7 @@ data-show-export="true"
     <th data-field="first_name" data-filter-control="input">שם פרטי</th>
     <th data-field="last_name" data-filter-control="input">שם משפחה</th>
     <th data-field="phone" data-filter-control="input">טלפון</th>
+    <th data-field="user_email" data-filter-control="input">אימייל</th> 
     <th data-field="roles" data-filter-control="select">סוג המינוי</th>
     <th data-field="price" data-filter-control="select" class="price"><span>מחיר</span></th>
     </tr>
@@ -65,39 +67,14 @@ data-show-export="true"
                     });
                 });
                 jQuery('.totalprice').text(rowTotal);
-                jQuery('.totalresult').text(counter);
+                jQuery('.result-number').text('מספר התוצאות: '+counter);
         });
 
     });
 
-    function ajaxRequestUsers(params) {
-            jQuery.ajax({
-            url: "/wp-json/captaincore/v1/purchased_users",
-            type: 'GET',
-            dataType: 'json',
-            headers: {
-                'X-WP-Nonce': wpReactLogin.nonceApi
-            },
-            data: {'prodcatid':'<?=$_SESSION['view']?>','district':'<?=$_SESSION['district']?>', 'sub_district': '<?=$_SESSION['sub_district']?>'},
-            contentType: 'application/json; charset=utf-8',
-            success: function (result) {
-                jQuery('.result-number').html('מספר התוצאות: <span class="totalresult">'+result.length+'</span>')
-                params.success(result)
-                var totalPrice = 0;
-                result.forEach(function(row) {
-                    totalPrice +=parseInt(row.price);
-                });
-                jQuery('.result-number').append( '<div>סה"כ מכירות: <span class="totalprice">'+totalPrice+'</span></div>' );
-                // console.log(totalPrice);
-                // console.log(result);
-            
-            // CallBack(result);
-            },
-            error: function (error) {
-                
-            }
-        });
-    }  
+    function ajaxRequestUsersCall(params){
+        ajaxRequestUsers(params,'/wp-json/captaincore/v1/purchased_users','<?=$_SESSION['district']?>','<?=$_SESSION['sub_district']?>',<?=$_SESSION['view']?>);
+    }
 
     function detailFormatter(index, row) {
         jQuery("#user_data_form").remove();
@@ -136,8 +113,8 @@ data-show-export="true"
         html.push('</div>');
         return html.join('');
     }
+
     function runningFormatter(value, row, index) {
         return index;
     }
-
 </script>

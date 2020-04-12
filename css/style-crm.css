@@ -78,3 +78,7 @@ input{
   border-color: #ffffff!important;
   background-color: #ffffff!important;
 }
+.product-list-table .product-list-a{
+  display: none;;
+}
+

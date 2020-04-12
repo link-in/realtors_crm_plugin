@@ -37,7 +37,6 @@ function district_users_func( $request ) {
         }
 
         $userMeta = get_user_meta ( $user_id->user_id);
-        // Kint::dump($userMeta);
         $allUsers[$counter]['rowNumber'] = $rowNumber; 
         $allUsers[$counter]['first_name'] = $userMeta['first_name'][0]; 
         $allUsers[$counter]['last_name'] = $userMeta['last_name'][0]; 
@@ -60,7 +59,8 @@ function district_users_func( $request ) {
         }elseif( $user->roles[0] == 'expired_membership'){
             $allUsers[$counter]['roles'] = 'מנוי לא בתוקף'; 
         }
-
+        // var_dump($userMeta);
+        // exit;
         $counter++;
         $rowNumber++;
     }
@@ -121,6 +121,7 @@ function get_user_data_func( $request ) {
     $user_data['shipping_address_1'] = get_user_meta($userID,'shipping_address_1');
     $user_data['shipping_postcode'] = get_user_meta($userID,'shipping_postcode');
     $user_data['phone'] = get_user_meta($userID,'phone');
+    $user_data['user_email'] = $userData->user_email;
     $user_data['district'] = get_user_meta($userID,'district');
     $user_data['sub_district'] = get_user_meta($userID,get_subDistrict_by_district($user_data['district'][0]));
 // var_dump($user_data['sub_district']);
@@ -218,6 +219,8 @@ function get_purchased_users_func( $request ) {
             $allUsers[$counter]['roles'] = 'חבר לשכה חדש - לא מאושר'; 
         }elseif( $user->roles[0] == 'new_monthly_subscriptionnot'){
             $allUsers[$counter]['roles'] = 'חבר לשכה חתום חודשי'; 
+        }elseif( $user->roles[0] == 'expired_membership'){
+            $allUsers[$counter]['roles'] = 'מנוי לא בתוקף'; 
         }
 
         $q = "SELECT DISTINCT im.order_item_id
@@ -367,3 +370,58 @@ function get_subDistrict_by_district($district_name){
         return 'sub_district_8';
     }
 }
+
+//מושך את כל הרוכשים של מינוי שנתי ומעדכן להם את הסטטוס
+function user_status_update(){
+    global $wpdb;
+    // $statuses = array_map( 'esc_sql', wc_get_is_paid_statuses() );
+
+    $customer = $wpdb->get_col("
+    SELECT DISTINCT pm.meta_value FROM wp_posts AS p
+    INNER JOIN wp_postmeta AS pm ON p.ID = pm.post_id
+    INNER JOIN wp_woocommerce_order_items AS i ON p.ID = i.order_id
+    INNER JOIN wp_woocommerce_order_itemmeta AS im ON i.order_item_id = im.order_item_id
+    WHERE p.post_status IN ( 'wc-processing','wc-completed' )
+    AND pm.meta_key IN ( '_customer_user' )
+    AND im.meta_key IN ( '_product_id', '_variation_id' )
+    AND im.meta_value = 3930
+    ");
+
+    $allUsers = array();
+    $counter = 0;
+    $rowNumber=1;
+    foreach($customer as $user_id){
+        // $userMeta = get_user_meta ( $user_id);
+        // $u = new WP_User( $user_id );
+        // $u->remove_role( 'subscriber' );
+        // $u->add_role( 'monthly_subscriptionnot_approve' );
+        // var_dump($u);
+        // exit;
+        
+        $caps = get_user_meta($user_id, 'wp_capabilities', true);
+        $roles = array_keys((array)$caps);
+        // $user_meta=get_userdata($user_id);
+        // echo $user_roles=$user_meta->roles;
+
+        // $user = get_user_by ( 'ID',$user_id);
+        // echo $user_id->user_id ." - " .$user->roles[0];
+        // exit;
+        if($roles[0] == 'monthly_subscriptionnot_approve' || $roles[0] == 'new_monthly_subscriptionnot'){
+            continue;
+        }
+
+        $q="UPDATE wp_usermeta SET meta_value='".serialize(array("monthly_subscriptionnot_approve" => 1))."' WHERE meta_key='wp_capabilities'";
+
+        $result = $wpdb->get_results($q);
+
+        // $user = new \WP_User( $user_id );
+        // $user->set_role( 'monthly_subscriptionnot_approve' );
+        // wp_update_user(array("ID"=>2029,"role"=>"monthly_subscriptionnot_approve"));
+        // var_dump($roles);
+        exit;
+    }
+
+    exit;
+}
+// user_status_update();
+// exit;
